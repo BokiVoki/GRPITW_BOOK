@@ -3,21 +3,15 @@ import fs from 'fs';
 
 async function getServiceAccountKey() {
   try {
-    // 환경 변수에서 서비스 계정 키 파일 경로 가져오기
-    const keyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    // 환경 변수에서 서비스 계정 키 JSON 문자열 가져오기
+    const keyJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     
-    if (!keyFilePath) {
-      throw new Error('GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다.');
+    if (!keyJson) {
+      throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON 환경 변수가 설정되지 않았습니다.');
     }
     
-    // 파일이 존재하는지 확인
-    if (!fs.existsSync(keyFilePath)) {
-      throw new Error(`서비스 계정 키 파일이 존재하지 않습니다: ${keyFilePath}`);
-    }
-    
-    // 파일 읽기
-    const keyFileContent = fs.readFileSync(keyFilePath, 'utf8');
-    return JSON.parse(keyFileContent);
+    // JSON 문자열을 객체로 파싱
+    return JSON.parse(keyJson);
   } catch (error) {
     console.error('Error getting service account key:', error);
     throw new Error('Failed to get service account key: ' + error.message);

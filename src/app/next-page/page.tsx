@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import axios from 'axios';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { google } from 'googleapis';
 
 const NextPage = () => {
   const [itemNames, setItemNames] = useState<string[]>([]);
@@ -239,7 +237,7 @@ const NextPage = () => {
     const match = groupedItem.match(/^(.*?)(\d+)~(\d+)$/);
     
     if (match) {
-      const [_, prefix, startStr, endStr] = match;
+      const [, prefix, startStr, endStr] = match;
       const start = parseInt(startStr, 10);
       const end = parseInt(endStr, 10);
       
