@@ -116,7 +116,7 @@ const NextPage = () => {
                 setEditingTitle(null);
               }
             }}
-            style={{ width: `${buttonTexts[label]?.length || 1}ch`, border: 'none', outline: 'none' }}
+            style={{ width: `${(buttonTexts[label]?.length || 1) + 1}ch`, border: 'none', outline: 'none' }}
           />
           )
         </>
@@ -283,7 +283,7 @@ const NextPage = () => {
         onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
         onClick={() => handleButtonClick(label)}
       >
-        {renderButtonText(label, true)}
+        {renderButtonText(label, false)}
       </button>
     );
   };

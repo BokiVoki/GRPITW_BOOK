@@ -6,6 +6,13 @@ async function getServiceAccountKey() {
     // 환경 변수에서 서비스 계정 키 JSON 문자열 가져오기
     const keyJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
     
+    console.log('환경 변수 확인:', {
+      SPREADSHEET_ID: process.env.SPREADSHEET_ID,
+      SHEET_RANGE: process.env.SHEET_RANGE,
+      SECRET_NAME: process.env.SECRET_NAME,
+      HAS_CREDENTIALS: !!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+    });
+    
     if (!keyJson) {
       throw new Error('GOOGLE_APPLICATION_CREDENTIALS_JSON 환경 변수가 설정되지 않았습니다.');
     }
@@ -58,19 +65,25 @@ export default async function handler(req, res) {
         });
       }
 
+      console.log('인증 시작...');
       const credentials = await getServiceAccountKey();
+      console.log('인증 정보 가져옴:', !!credentials);
 
       const auth = new google.auth.GoogleAuth({
         credentials,
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
       });
 
+      console.log('클라이언트 생성 중...');
       const client = await auth.getClient();
+      console.log('클라이언트 생성 완료');
+      
       const sheets = google.sheets({ version: 'v4', auth: client });
 
       const spreadsheetId = process.env.SPREADSHEET_ID;
       const range = 'ITW_GPR_BOOK!A:K';
 
+      console.log('스프레드시트 검색 시작:', { spreadsheetId, range });
       // 스프레드시트에서 해당 항목 찾기
       const rowIndex = await findItemInSpreadsheet(sheets, spreadsheetId, range, movedItem);
       
@@ -83,23 +96,32 @@ export default async function handler(req, res) {
         
         console.log(`Updating item "${movedItem}" at row ${rowIndex}, setting location to "${locationValue}"`);
         
-        const updateResponse = await sheets.spreadsheets.values.update({
-          auth: client,
-          spreadsheetId,
-          range: updateRange,
-          valueInputOption: 'USER_ENTERED',
-          requestBody: {
-            values: [[locationValue]],
-          },
-        });
-        
-        console.log('Google Sheets updated successfully:', updateResponse.data);
-        res.status(200).json({ 
-          message: 'Google Sheets updated successfully',
-          item: movedItem,
-          location: locationValue,
-          rowIndex: rowIndex
-        });
+        try {
+          const updateResponse = await sheets.spreadsheets.values.update({
+            auth: client,
+            spreadsheetId,
+            range: updateRange,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: {
+              values: [[locationValue]],
+            },
+          });
+          
+          console.log('Google Sheets updated successfully:', updateResponse.data);
+          res.status(200).json({ 
+            message: 'Google Sheets updated successfully',
+            item: movedItem,
+            location: locationValue,
+            rowIndex: rowIndex
+          });
+        } catch (updateError) {
+          console.error('Error updating spreadsheet:', updateError);
+          res.status(500).json({ 
+            message: 'Failed to update Google Sheets',
+            error: updateError.message,
+            stack: updateError.stack
+          });
+        }
       } else {
         console.log(`Item "${movedItem}" not found in spreadsheet`);
         res.status(404).json({ message: `Item "${movedItem}" not found in spreadsheet` });
